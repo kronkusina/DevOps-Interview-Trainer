@@ -1,0 +1,14 @@
+services:
+  trainer:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3.6-27b}
+    volumes:
+      - trainer_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  trainer_data:

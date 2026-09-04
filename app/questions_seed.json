@@ -1,0 +1,1154 @@
+[
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Как посмотреть, какой процесс занимает порт 8080?",
+    "reference_answer": "Использовать ss -tulpn | grep 8080 или netstat -tulpn | grep 8080, либо lsof -i :8080. Это покажет PID и имя процесса, слушающего порт.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Чем отличается hard link от symbolic link?",
+    "reference_answer": "Hard link — это ещё один указатель на тот же inode, файлы неотличимы, нельзя ссылаться на директории и между разными файловыми системами. Symlink — отдельный файл с путём до цели, может указывать на директории и через границы ФС, но ломается при удалении/перемещении цели.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Что такое load average и как его интерпретировать?",
+    "reference_answer": "Load average — среднее число процессов в состоянии running/waiting за 1, 5, 15 минут. Нужно сравнивать с количеством CPU-ядер: значение выше числа ядер говорит о перегрузке. Важно учитывать, что в Linux в load average также попадают процессы в uninterruptible sleep (I/O wait).",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question": "Объясни разницу между процессами в состоянии D (uninterruptible sleep) и Z (zombie). Как диагностировать зависший в D процесс?",
+    "reference_answer": "Z (zombie) — процесс завершился, но родитель не сделал wait() и не считал exit status, занимает только запись в таблице процессов. D — процесс ждёт I/O операцию (обычно диск/NFS) и не может быть прерван сигналами. Для диагностики D: смотреть /proc/PID/stack, iotop, dmesg на предмет hung task, проверять состояние диска/NFS-сервера. Завершить D-процесс обычным kill нельзя.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question": "Как работает OOM killer и как он выбирает жертву?",
+    "reference_answer": "При нехватке памяти ядро вызывает OOM killer, который считает oom_score для каждого процесса (учитывает объём используемой памяти, время работы, приоритет через oom_score_adj) и убивает процесс с наибольшим значением. Можно влиять через /proc/PID/oom_score_adj или защитить процесс значением -1000.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Как ограничить ресурсы (CPU/память) для процесса без контейнеров?",
+    "reference_answer": "Через cgroups напрямую, либо утилитой systemd-run/юнит systemd с директивами MemoryMax, CPUQuota. Также можно использовать ulimit для ограничения ресурсов на уровне shell/процесса, но это менее гибко, чем cgroups.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "В чём разница между CMD и ENTRYPOINT в Dockerfile?",
+    "reference_answer": "ENTRYPOINT задаёт основную команду, которая всегда выполняется при старте контейнера, CMD задаёт аргументы по умолчанию, которые можно переопределить при docker run. Часто их комбинируют: ENTRYPOINT задаёт бинарник, CMD — дефолтные флаги.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Зачем нужен multi-stage build?",
+    "reference_answer": "Чтобы уменьшить размер финального образа: в одной стадии собирается приложение (со всеми build-зависимостями, компиляторами), а в финальную стадию копируются только нужные артефакты в минимальный базовый образ. Уменьшает размер и поверхность атаки.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Что происходит с данными в контейнере при его удалении и как их сохранить?",
+    "reference_answer": "Все данные в writable-слое контейнера теряются при удалении контейнера. Чтобы сохранить данные — использовать volumes (docker volume) или bind mounts, которые существуют независимо от жизненного цикла контейнера.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question": "Как устроены слои (layers) образа и как это влияет на кэширование сборки?",
+    "reference_answer": "Каждая инструкция Dockerfile создаёт новый слой (union filesystem, обычно overlay2), слои кэшируются по хешу инструкции и контексту. При изменении слоя все последующие слои пересобираются заново, поэтому редко изменяющиеся инструкции (установка зависимостей) должны идти раньше часто изменяющихся (копирование кода).",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question": "Как работает docker network в режиме bridge и как контейнеры находят друг друга по имени?",
+    "reference_answer": "В user-defined bridge сети Docker поднимает встроенный DNS-сервер (127.0.0.11), который резолвит имена контейнеров/сервисов в их внутренние IP. Дефолтная bridge-сеть такого DNS не имеет, там работает только через --link (deprecated) или явные IP.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question": "Какие есть механизмы ограничения ресурсов контейнера и что будет при превышении memory limit?",
+    "reference_answer": "Ограничения задаются через cgroups: --memory, --cpus, --memory-swap. При превышении memory limit ядро вызывает OOM killer внутри cgroup контейнера, процесс убивается (контейнер падает с кодом 137), в отличие от CPU limit, где просто происходит throttling без падения.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Чем Deployment отличается от StatefulSet?",
+    "reference_answer": "Deployment управляет stateless-подами с взаимозаменяемыми репликами без стабильной идентичности и порядка. StatefulSet даёт подам стабильные сетевые имена (pod-0, pod-1...), стабильное хранилище через volumeClaimTemplates и упорядоченный деплой/удаление — нужен для БД и кластерных сервисов.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Что такое readiness probe и liveness probe и в чём разница?",
+    "reference_answer": "Liveness probe проверяет, жив ли контейнер — при провале kubelet перезапускает контейнер. Readiness probe проверяет, готов ли под принимать трафик — при провале под убирается из Endpoints сервиса, но не перезапускается.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Какие есть типы Service в Kubernetes?",
+    "reference_answer": "ClusterIP (доступен только внутри кластера, дефолтный), NodePort (открывает порт на каждой ноде), LoadBalancer (создаёт внешний балансировщик у облачного провайдера), ExternalName (алиас на внешний DNS-адрес).",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Как работает Scheduler при выборе ноды для пода?",
+    "reference_answer": "Scheduler проходит два этапа: filtering (отсекает ноды, не подходящие по ресурсам, taints/tolerations, node affinity, portConflicts) и scoring (ранжирует оставшиеся ноды по приоритетам: баланс ресурсов, affinity/anti-affinity, топология). Под назначается на ноду с наивысшим score.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Объясни, что происходит при rolling update Deployment и как настроить его поведение.",
+    "reference_answer": "Controller постепенно создаёт поды новой ревизии и удаляет старые, соблюдая maxSurge (сколько лишних подов сверх желаемого числа можно создать) и maxUnavailable (сколько подов может быть недоступно). Readiness probe определяет, когда новый под считается готовым и можно продолжать rollout.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Как устроено обнаружение проблем в кластере через etcd, и что произойдёт при потере кворума etcd?",
+    "reference_answer": "etcd — распределённое consensus-хранилище (Raft), хранит весь state кластера. При потере кворума (больше половины узлов недоступно) кластер etcd перестаёт принимать записи — control plane не сможет изменять состояние (создавать/удалять объекты), но уже запущенные поды продолжат работать, так как kubelet работает независимо от API server для уже назначенных подов.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question": "Чем rebase отличается от merge?",
+    "reference_answer": "Merge создаёт новый merge-коммит, объединяющий две ветки, сохраняя полную историю. Rebase переписывает историю, перенося коммиты твоей ветки поверх целевой ветки, получая линейную историю без merge-коммитов, но изменяя хеши коммитов.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question": "Как отменить последний коммит, но сохранить изменения в staged?",
+    "reference_answer": "git reset --soft HEAD~1 — отменяет коммит, но оставляет изменения в index (staged). git reset --mixed (по умолчанию) оставит изменения в working directory, но уберёт из staging.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question": "Как работает git bisect и когда его использовать?",
+    "reference_answer": "git bisect выполняет бинарный поиск по истории коммитов между известным good и bad коммитом, чтобы найти конкретный коммит, внёсший баг. На каждом шаге git чекаутит средний коммит, пользователь помечает его good/bad (или используется --run с автоматическим скриптом-тестом), пока не найдётся первый плохой коммит.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question": "Что такое git reflog и чем он может помочь при потере коммитов?",
+    "reference_answer": "reflog — локальный лог всех изменений HEAD (коммиты, checkout, reset, rebase), хранится отдельно от истории веток около 90 дней по умолчанию. Позволяет восстановить коммиты, потерянные после reset --hard или удаления ветки, найдя их хеш через git reflog и сделав checkout/cherry-pick.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question": "В чём разница между Continuous Delivery и Continuous Deployment?",
+    "reference_answer": "Continuous Delivery — код всегда готов к деплою в прод, но финальный деплой требует ручного подтверждения. Continuous Deployment — каждое изменение, прошедшее тесты, автоматически деплоится в прод без ручного шага.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question": "Зачем нужен кэш зависимостей в CI-пайплайне?",
+    "reference_answer": "Чтобы не скачивать/пересобирать одни и те же зависимости (npm modules, pip packages, docker layers) на каждом запуске, что существенно ускоряет пайплайн и снижает нагрузку на внешние реестры.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question": "Как организовать безопасную работу с секретами в CI/CD пайплайне?",
+    "reference_answer": "Секреты хранятся в специализированных хранилищах (Vault, Secrets Manager, встроенные secrets CI-системы), никогда не коммитятся в репозиторий. Доступ выдаётся по ролям (least privilege), секреты маскируются в логах, используются short-lived токены/OIDC вместо статичных ключей там, где возможно.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question": "Как реализовать canary-деплой в CI/CD пайплайне?",
+    "reference_answer": "Новая версия выкатывается на небольшую часть трафика/инстансов (например через weighted routing в service mesh или Ingress), метрики новой версии сравниваются с baseline (error rate, latency), при отклонениях — автоматический rollback, при успехе — постепенное увеличение доли трафика до 100%.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question": "В чём разница между TCP и UDP?",
+    "reference_answer": "TCP — с установлением соединения, гарантирует доставку и порядок пакетов, есть контроль перегрузки. UDP — без установления соединения, не гарантирует доставку/порядок, но имеет меньше накладных расходов, используется там, где важна скорость (стриминг, DNS, игры).",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question": "Что происходит при DNS-резолвинге домена, введённого в браузере?",
+    "reference_answer": "Проверяется локальный кэш браузера/ОС, затем запрос идёт к резолверу (обычно у провайдера), который последовательно опрашивает root, TLD и авторитативные NS-серверы (если нет в кэше), возвращая IP-адрес, который затем используется для установления TCP-соединения.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question": "Объясни разницу между L4 и L7 балансировкой нагрузки.",
+    "reference_answer": "L4-балансировка работает на транспортном уровне (TCP/UDP), решение о маршрутизации принимается по IP/порту без анализа содержимого — быстрее, но не может маршрутизировать по URL/заголовкам. L7-балансировка работает на прикладном уровне (HTTP), может анализировать URL, headers, cookies для маршрутизации, делать SSL termination, но требует больше ресурсов.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question": "Как работает handshake TLS и зачем нужен Server Name Indication (SNI)?",
+    "reference_answer": "Клиент отправляет ClientHello с поддерживаемыми шифрами и SNI (именем хоста), сервер отвечает сертификатом и выбранным шифром, происходит обмен ключами (обычно через ECDHE), после чего устанавливается симметричное шифрование. SNI нужен, чтобы сервер с одним IP мог выбрать правильный сертификат для нескольких доменов на этапе handshake, до расшифровки HTTP-запроса.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question": "В чём разница между метриками, логами и трейсами (три столпа observability)?",
+    "reference_answer": "Метрики — агрегированные числовые данные во времени (CPU load, RPS), хороши для алертинга и дашбордов. Логи — дискретные события с контекстом, хороши для расследования конкретной проблемы. Трейсы — показывают путь запроса через распределённую систему, хороши для поиска узкого места в цепочке сервисов.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "senior",
+    "question": "Как устроен pull-based сбор метрик в Prometheus и какие у этого ограничения?",
+    "reference_answer": "Prometheus сам ходит (scrape) по HTTP на эндпоинт /metrics у таргетов через заданный интервал, таргеты определяются через service discovery. Ограничение: недолговечные (short-lived) задачи не успевают быть заскрапены — для них используют Pushgateway. Также pull-модель хуже работает через сложные сетевые барьеры/NAT.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "middle",
+    "question": "Что такое принцип наименьших привилегий (least privilege) и как его применять в DevOps?",
+    "reference_answer": "Каждый пользователь/сервис должен иметь минимально необходимый набор прав для выполнения своей задачи, не больше. В DevOps: разделение ролей в IAM, отдельные service accounts с ограниченными правами вместо root/admin, RBAC в Kubernetes, ограничение сетевого доступа через security groups/network policies.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "senior",
+    "question": "Как защитить секреты (пароли, API-ключи) в Kubernetes-кластере?",
+    "reference_answer": "Базовые Kubernetes Secrets хранятся в etcd в base64 (не шифрование) — нужно включать encryption at rest для etcd. Лучше использовать внешние хранилища (Vault, cloud KMS) с интеграцией через CSI driver или External Secrets Operator, ограничивать доступ через RBAC, не монтировать секреты без необходимости, избегать передачи через env-переменные (видны в логах/dump).",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Как посмотреть открытые TCP/UDP порты на Linux?",
+    "reference_answer": "Использовать ss -tulpn; для конкретного порта можно добавить grep. lsof -i также показывает процесс, который использует сокет.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Как посмотреть логи systemd-сервиса?",
+    "reference_answer": "Использовать journalctl -u service-name, например journalctl -u nginx -n 100. Для live-режима — journalctl -u nginx -f.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Что делает chmod 755?",
+    "reference_answer": "Владелец получает rwx, группа и остальные получают r-x. Числа 7,5,5 — суммы битов read=4, write=2, execute=1.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Чем grep отличается от awk и sed?",
+    "reference_answer": "grep ищет строки/шаблоны, awk предназначен для обработки структурированного текстового вывода по полям, sed — для потоковых замен и преобразований текста.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question": "Что такое environment variables и как посмотреть их у процесса?",
+    "reference_answer": "Переменные окружения передаются процессу при запуске. Для процесса можно посмотреть /proc/PID/environ или использовать ps eww, учитывая права доступа.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question": "Что такое file descriptor и как найти утечки FD?",
+    "reference_answer": "FD — числовой дескриптор открытого файла, сокета, pipe и т.п. Лимиты и открытые дескрипторы смотрят через ulimit -n и /proc/PID/fd или lsof. Рост числа FD может указывать на утечку.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question": "Как диагностировать проблему с диском, если iowait высокий?",
+    "reference_answer": "Проверить iostat -xz, pidstat -d, latency/queue, SMART для диска, dmesg и состояние RAID/NFS. Нужно определить, какой workload создаёт I/O и есть ли saturation устройства.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Что такое Docker volume и bind mount?",
+    "reference_answer": "Volume управляется Docker и хранится в его storage, bind mount связывает контейнер с конкретным путём хоста. Volume обычно удобнее для persistent data, bind mount — когда нужен прямой доступ к файлам хоста.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Как посмотреть логи контейнера и последние строки?",
+    "reference_answer": "docker logs container, например docker logs --tail 100 -f container. Если приложение пишет в файл внутри контейнера, docker logs этого не покажет.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Что означает exit code 137 у контейнера?",
+    "reference_answer": "Обычно процесс получил SIGKILL (128+9=137), часто из-за OOM killer при превышении memory limit. Нужно проверить docker inspect, события и потребление памяти.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question": "Что такое restart policy?",
+    "reference_answer": "Например --restart unless-stopped или always задаёт Docker, когда перезапускать контейнер после остановки. Это не замена healthcheck и не полноценный оркестратор.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question": "Почему порядок инструкций Dockerfile влияет на cache?",
+    "reference_answer": "Кэш проверяется для каждого слоя. Если изменился ранний слой, последующие слои могут потребовать пересборки. Поэтому зависимости и редко меняющиеся операции обычно ставят раньше COPY исходников.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question": "Что такое rootless Docker?",
+    "reference_answer": "Docker daemon и контейнеры работают без root-привилегий пользователя. Это уменьшает риск от контейнерного компромисса, но имеет ограничения и требует корректной настройки user namespaces.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Что такое namespace в Kubernetes?",
+    "reference_answer": "Namespace логически разделяет namespaced-ресурсы и позволяет применять RBAC, quotas и policies. Он не является полноценной сетевой или security-изоляцией сам по себе.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Как посмотреть события Kubernetes?",
+    "reference_answer": "kubectl get events -A --sort-by=.lastTimestamp или kubectl describe resource. Events часто показывают ошибки scheduling, image pull, probes и volume mounts.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Что делает kubectl rollout status?",
+    "reference_answer": "Показывает, завершился ли rollout workload. Для Deployment можно использовать kubectl rollout status deployment/name и затем kubectl rollout history.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question": "Что такое ServiceAccount?",
+    "reference_answer": "Identity, которую Pod использует для доступа к Kubernetes API или внешним системам. Права выдаются через RBAC; ServiceAccount сам по себе прав не предоставляет.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Почему Pod может быть Pending?",
+    "reference_answer": "Причины: недостаток ресурсов, taints без tolerations, affinity, отсутствующие PVC, topology constraints или проблемы scheduler. kubectl describe pod покажет события scheduler.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Что такое HPA?",
+    "reference_answer": "Horizontal Pod Autoscaler меняет число реплик workload на основании метрик, например CPU, memory или custom metrics. Для корректной работы нужны metrics и разумные requests.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Чем Ingress отличается от Service?",
+    "reference_answer": "Service предоставляет стабильную точку доступа к набору Pod. Ingress описывает HTTP/HTTPS маршрутизацию от внешнего входа к Service и требует Ingress Controller.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Что такое DaemonSet?",
+    "reference_answer": "DaemonSet обеспечивает Pod на каждой подходящей ноде или на выбранном наборе нод. Типичные примеры — node agents, CNI и log collectors.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question": "Что такое PVC и PV?",
+    "reference_answer": "PV описывает доступный persistent storage, PVC — запрос приложения на storage. Kubernetes связывает подходящий PV с PVC, а Pod монтирует PVC.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question": "Что такое git stash?",
+    "reference_answer": "stash временно сохраняет незакоммиченные изменения и очищает рабочее дерево. Позже их можно вернуть через git stash pop/apply.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question": "Как посмотреть последний коммит?",
+    "reference_answer": "git show HEAD показывает commit и diff; git log -1 даёт краткую информацию.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question": "Что такое .gitignore и чего он не делает?",
+    "reference_answer": "Он исключает совпадающие файлы из обычного добавления в Git. Уже отслеживаемый файл .gitignore не перестанет отслеживаться автоматически — его нужно убрать из index.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question": "Что делать при merge conflict?",
+    "reference_answer": "Посмотреть конфликтующие файлы, выбрать/объединить корректные изменения, выполнить git add и завершить merge или rebase соответствующей командой. Не следует blindly принимать ours/theirs без понимания изменений.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question": "Как проверить, кто изменил конкретную строку?",
+    "reference_answer": "git blame file показывает commit и автора для строк. Затем git show COMMIT позволяет исследовать причину изменения.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question": "Что такое signed commit и зачем он нужен?",
+    "reference_answer": "Подписанный commit позволяет криптографически подтвердить ключ, которым был сделан commit. Это повышает доверие к provenance, но не гарантирует корректность самого кода.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question": "Зачем нужны stages и jobs в GitLab CI?",
+    "reference_answer": "Stage группирует логические этапы, jobs выполняют конкретные действия. Jobs одного stage могут выполняться параллельно, если зависимости это позволяют.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question": "Что такое CI runner?",
+    "reference_answer": "Runner — агент, который получает job от CI-системы и выполняет команды pipeline. Его executor определяет среду запуска: shell, Docker, Kubernetes и т.д.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question": "Почему тесты должны выполняться до production deploy?",
+    "reference_answer": "Чтобы не выпускать очевидно сломанный artifact. Обычно deploy разрешают только после успешных checks, хотя некоторые smoke/canary проверки выполняются уже после deploy.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question": "Что такое immutable artifact?",
+    "reference_answer": "Artifact после сборки не изменяется. Для deployment используется тот же digest/version, который прошёл тесты, что улучшает reproducibility и rollback.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question": "Как сделать deployment job безопасной для повторного запуска?",
+    "reference_answer": "Использовать versioned artifacts, декларативные операции и идемпотентные команды. Повторный запуск должен привести к тому же desired state, а не создать дубликаты или повредить систему.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question": "Зачем нужен OIDC в CI/CD?",
+    "reference_answer": "OIDC позволяет pipeline получить краткоживущий identity token и обменять его на доступ у cloud/secret provider. Это уменьшает необходимость хранить долгоживущие credentials.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question": "Что делает команда curl -v?",
+    "reference_answer": "Показывает подробности HTTP(S)-обмена: DNS/connection details, request/response headers и TLS-диагностику. Полезна для разделения проблем TCP, TLS и HTTP.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question": "Что такое default gateway?",
+    "reference_answer": "Маршрутизатор, куда host отправляет пакеты для сетей, отсутствующих в более специфичных маршрутах. Проверить можно ip route.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question": "Чем ping проверяет связь и чего он не доказывает?",
+    "reference_answer": "ping использует ICMP echo и проверяет достижимость/RTT ICMP. Успешный ping не доказывает, что TCP-порт открыт или HTTP-сервис работает.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question": "Что такое reverse proxy?",
+    "reference_answer": "Сервер, который принимает запросы клиентов и отправляет их backend-сервисам. Он может выполнять TLS termination, routing, load balancing, auth и rate limiting.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question": "Что такое connection pooling?",
+    "reference_answer": "Переиспользование уже открытых соединений вместо создания нового для каждого запроса. Это уменьшает handshake/latency и нагрузку на сервер, но требует контроля размера пула и timeouts.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question": "Как работает HTTP keep-alive?",
+    "reference_answer": "Клиент и сервер могут использовать одно TCP-соединение для нескольких HTTP-запросов. Это уменьшает стоимость установления соединений; конкретное поведение зависит от HTTP версии и настроек.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question": "Что такое histogram в Prometheus?",
+    "reference_answer": "Histogram разбивает наблюдения по bucket и хранит count/sum. На его основе можно вычислять распределение и приближённые quantiles, например latency p95.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question": "Зачем нужны labels в Prometheus?",
+    "reference_answer": "Labels позволяют фильтровать и агрегировать один тип метрики по измерениям, например method/status. Но большое число уникальных label values вызывает cardinality explosion.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "senior",
+    "question": "Чем p50 отличается от p95 и p99?",
+    "reference_answer": "p50 — медиана, p95 — значение, ниже которого находится 95% наблюдений, p99 — 99%. Высокие перцентили лучше показывают tail latency, важную для пользовательского опыта.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "monitoring",
+    "grade": "senior",
+    "question": "Что такое distributed tracing?",
+    "reference_answer": "Tracing связывает операции между сервисами в один trace из spans. Это позволяет увидеть, где теряется время в микросервисном запросе.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "middle",
+    "question": "Что такое TLS certificate chain?",
+    "reference_answer": "Сертификат сервера подписан CA или intermediate CA. Клиент проверяет цепочку доверия до доверенного root CA, срок действия, hostname и другие параметры.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "middle",
+    "question": "Что такое RBAC?",
+    "reference_answer": "Role-Based Access Control связывает identity с Role/ClusterRole через RoleBinding/ClusterRoleBinding. Права — allow-only; всё не разрешённое RBAC не даёт.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "senior",
+    "question": "Что такое network segmentation?",
+    "reference_answer": "Разделение инфраструктуры на зоны с контролируемыми потоками между ними. Это уменьшает lateral movement и blast radius при компрометации.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "security",
+    "grade": "senior",
+    "question": "Что такое secret rotation?",
+    "reference_answer": "Периодическая замена credentials/keys на новые с минимальным downtime. Хорошая система должна уметь выпускать новую пару, перевести клиентов и отозвать старую.",
+    "question_type": "theory",
+    "source": "База тренажёра"
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: Pod в Kubernetes стоит в Pending. Назови последовательность команд, которыми ты будешь искать причину, и какие результаты каждой команды ожидаешь.",
+    "reference_answer": "kubectl get pod -o wide; kubectl describe pod; kubectl get events --sort-by=.lastTimestamp; проверить requests, taints/tolerations, affinity, доступность нод и scheduler events.",
+    "source": "Практическая база: типовой troubleshooting-сценарий Kubernetes."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: Service существует, Pod Running, но приложение недоступно через Service. Как будешь диагностировать?",
+    "reference_answer": "Проверить selector Service, kubectl get endpoints/endpointslices, readiness, targetPort/port, curl по Pod IP, DNS и NetworkPolicy.",
+    "source": "Практическая база: типовой troubleshooting-сценарий Kubernetes."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: после deploy новая версия Pod уходит в CrashLoopBackOff. Как безопасно вернуть сервис и одновременно найти причину?",
+    "reference_answer": "Сначала оценить impact и при необходимости сделать kubectl rollout undo deployment/<name>; затем describe, logs, logs --previous, events, image/env/config/probes/resources. После стабилизации — RCA.",
+    "source": "Практическая база: rolling update / incident scenario."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: один worker node стал NotReady. Кластер продолжает работать. Что проверишь на самой ноде?",
+    "reference_answer": "kubectl describe node, conditions/events; SSH на node: systemctl status kubelet, journalctl -u kubelet, crictl ps/logs, df -h/df -i, free, uptime, ip addr/route, CNI status, container runtime.",
+    "source": "Практическая база: типовой node troubleshooting."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: половина Pod новой версии работает, половина старой, а пользователи получают ошибки. Какие параметры Deployment проверишь и как остановишь плохой rollout?",
+    "reference_answer": "Проверить rollout status/history, strategy RollingUpdate, maxUnavailable/maxSurge, readinessProbe. Остановить/откатить через rollout undo, затем проверить причины падения новой версии.",
+    "source": "Практическая база: сценарий rolling update."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: HPA показывает 0/0 или не масштабирует Deployment, хотя CPU на Pod высокий. Что проверишь?",
+    "reference_answer": "metrics-server/API, requests CPU (HPA обычно опирается на utilization относительно request), состояние HPA describe, targetRef, metrics API, events и actual Pod metrics.",
+    "source": "Практическая база: типовой HPA troubleshooting."
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: контейнер постоянно перезапускается. Какие команды запускаешь в первую очередь?",
+    "reference_answer": "docker ps -a; docker logs <container>; docker inspect <container>; посмотреть ExitCode, OOMKilled, command/entrypoint, env, mounts и restart policy.",
+    "source": "Публичные практические DevOps-сценарии."
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: docker build стал внезапно очень медленным. Как локализуешь проблему?",
+    "reference_answer": "Посмотреть build output и cache hits, размер context через .dockerignore, порядок Dockerfile layers, COPY больших директорий, скачивание dependencies и BuildKit cache.",
+    "source": "Практическая задача на Docker build."
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: image успешно собирается, но в production контейнер падает сразу после старта. Что сравнишь между build и runtime?",
+    "reference_answer": "ENTRYPOINT/CMD, архитектуру binary, динамические библиотеки/CGO, env/secrets, working directory, permissions, mounted files, user и runtime logs.",
+    "source": "Практическая задача на runtime debugging."
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: registry возвращает denied: requested access to the resource is denied, хотя вчера push работал. Назови минимум пять проверок.",
+    "reference_answer": "Проверить docker login/credential, registry URL и repository name, права токена, expiration/rotation, image tag, TLS/CA, registry auth logs и наличие repository/project.",
+    "source": "Публичный практический сценарий registry rejection."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: сервер сообщает No space left on device, но df -h показывает ещё свободное место. Что проверишь?",
+    "reference_answer": "df -i для inode exhaustion; lsof +L1 для удалённых, но открытых файлов; du для крупных директорий; journal/log rotation; mount и quota.",
+    "source": "Реальный эксплуатационный сценарий Linux."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: процесс потребляет 100% CPU. Какие команды используешь и что ищешь?",
+    "reference_answer": "top/htop/ps, затем pidstat/top -H для потоков, /proc, strace/perf при необходимости. Определить user/system time и понять, CPU это или I/O wait.",
+    "source": "Практическая задача на Linux troubleshooting."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: systemd-сервис не стартует после reboot. Покажи минимальный план диагностики.",
+    "reference_answer": "systemctl status service; journalctl -u service -b; systemctl cat service; проверить dependencies, paths, permissions, env и network readiness.",
+    "source": "Публичный типовой interview scenario."
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: пользователи жалуются на медленный сервер, но CPU 30% и RAM 50%. Что проверишь дальше?",
+    "reference_answer": "Load average, iowait, disk latency/iops, network, filesystem, locks, process states, DB latency, dmesg и application metrics. CPU/RAM alone не показывают saturation.",
+    "source": "Публичный troubleshooting pattern."
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: curl https://api.example.com зависает. DNS резолвится. Как пойдёшь по цепочке диагностики?",
+    "reference_answer": "curl -v, nc -vz, ss, ip route, firewall/security groups, tcpdump; затем TLS handshake и HTTP response. Разделить DNS/TCP/TLS/HTTP.",
+    "source": "Практический сетевой troubleshooting."
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: приложение доступно по IP, но не по имени. Какие проверки сделаешь?",
+    "reference_answer": "dig/nslookup, /etc/resolv.conf, DNS server reachability, records/TTL, search domain, split-horizon DNS и application hostname config.",
+    "source": "Практическая DNS-задача."
+  },
+  {
+    "topic": "networks",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: маленькие HTTP-запросы проходят, а большие ответы через VPN зависают. Что заподозришь?",
+    "reference_answer": "MTU/PMTUD/fragmentation. Проверить ping с DF и разными payload, interface MTU и tcpdump; для overlay/VPN подобрать корректный MTU/MSS.",
+    "source": "Практическая задача на MTU."
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: pipeline зелёный, но после deploy приложение не отвечает. Как построишь post-deploy verification?",
+    "reference_answer": "Проверить rollout/readiness, health endpoint, Service/Ingress, smoke test, error rate/latency и логи. Pipeline должен падать, если критическая проверка не прошла.",
+    "source": "Практическая CI/CD задача."
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: production deploy сломал сервис. Как спроектируешь автоматический rollback?",
+    "reference_answer": "Хранить immutable versioned artifact, иметь health/smoke checks и timeout; при нарушении SLO автоматически или с approval выполнить rollback на предыдущий known-good version и проверить recovery.",
+    "source": "Практическая задача на deployment safety."
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: один и тот же Docker image должен пройти dev → staging → production. Как организуешь pipeline?",
+    "reference_answer": "Собрать один immutable image, push в registry с digest/tag, протестировать, затем продвигать тот же digest между environments; не пересобирать отдельно для production.",
+    "source": "Практическая CI/CD задача."
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: ты сделал rebase, но после него понял, что потерял важный коммит. Как восстановишь?",
+    "reference_answer": "Использовать git reflog, найти старый HEAD/commit и создать branch или reset на нужный commit.",
+    "source": "Практическая Git-задача."
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: тебе нужно перенести один security fix из main в release branch, не перенося остальные изменения. Что сделаешь?",
+    "reference_answer": "git cherry-pick <commit>, разрешить конфликты, протестировать и отправить в release. Если история должна быть линейной, не делать бессмысленный merge всей main.",
+    "source": "Практическая Git-задача."
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: Grafana показывает нормальный average latency, но пользователи жалуются на задержки. Что проверишь?",
+    "reference_answer": "p95/p99 latency, histogram buckets, конкретные endpoints/instances/regions и correlation с errors/saturation. Среднее может скрывать tail latency.",
+    "source": "Практическая observability-задача."
+  },
+  {
+    "topic": "monitoring",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: Prometheus резко вырос по памяти после добавления одного label. Как найдёшь виновника?",
+    "reference_answer": "Проверить cardinality/series count, Prometheus TSDB/status, query cardinality и метрику с новым label. Убрать high-cardinality label или ограничить набор значений.",
+    "source": "Практическая задача на cardinality."
+  },
+  {
+    "topic": "security",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: секрет случайно закоммитили в Git. Что делаешь в первые 15 минут?",
+    "reference_answer": "Считать секрет скомпрометированным, немедленно revoke/rotate, проверить использование, ограничить blast radius, удалить из текущей истории при необходимости и провести поиск по репозиториям/CI logs.",
+    "source": "Практический incident scenario."
+  },
+  {
+    "topic": "security",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: CI job должен деплоить только namespace dev, но сейчас использует cluster-admin kubeconfig. Как исправишь?",
+    "reference_answer": "Создать отдельную identity/service account с минимальным Role/RoleBinding только в dev, заменить long-lived kubeconfig на short-lived/OIDC credential, защитить production отдельно и проверить audit.",
+    "source": "Практическая Kubernetes security задача."
+  },
+  {
+    "topic": "terraform",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Что будет, если удалить ресурс вручную из AWS, а затем запустить terraform plan?",
+    "reference_answer": "Terraform увидит расхождение между state/config и реальной инфраструктурой и обычно предложит создать ресурс заново, если он нужен конфигурации.",
+    "source": "Публичная практическая IaC-задача."
+  },
+  {
+    "topic": "terraform",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: два инженера одновременно запускают terraform apply с одним state. Как предотвратить гонку?",
+    "reference_answer": "Использовать remote backend с state locking и CI/CD workflow, ограничить прямые apply и разделить state по ownership. Для AWS, например, backend должен поддерживать locking.",
+    "source": "Практическая IaC-задача."
+  },
+  {
+    "topic": "ansible",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: Ansible playbook запускается повторно и каждый раз меняет сервер. Что это говорит о playbook?",
+    "reference_answer": "Он неидемпотентен. Нужно использовать модули и параметры desired state, которые не выполняют изменение, если состояние уже соответствует требуемому.",
+    "source": "Практическая Ansible-задача."
+  },
+  {
+    "topic": "terraform",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: terraform plan хочет пересоздать ресурс, хотя ты ничего не менял. Как исследуешь diff?",
+    "reference_answer": "Смотреть plan -out и terraform show, state show, provider version, computed/unknown attributes, lifecycle и drift. Сравнить actual resource и state, не делать apply вслепую.",
+    "source": "Практическая IaC troubleshooting."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «У вас кластер из 30 нод: 29 Ready, одна NotReady. Вы уже проверили kubectl logs и describe. Что будете делать дальше?»",
+    "reference_answer": "Проверить kubelet/runtime/CNI на самой ноде, системные ресурсы, disk/inodes, network/routes, journalctl, crictl, kernel/dmesg и сравнить с рабочей нодой.",
+    "source": "Публичный interview report / Nextturn collection."
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Расскажите ваш текущий CI/CD setup end-to-end». Что обязательно нужно рассказать, чтобы ответ был сильным?",
+    "reference_answer": "Показать путь commit → CI → tests → build artifact/image → registry → deploy → verification → monitoring → rollback, назвать triggers, environments, secrets, approvals и ownership.",
+    "source": "Публичные отчёты о DevOps-интервью."
+  },
+  {
+    "topic": "docker",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Объясните Docker layer caching: если изменился layer 5, что будет с layers 6–10?»",
+    "reference_answer": "Кэш после изменившегося слоя обычно становится непригодным для последующих зависимых layers, поэтому они пересобираются. Порядок Dockerfile важен для cache efficiency.",
+    "source": "Публичная подборка реальных DevOps interview questions."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Как устроить multi-tenant isolation в общем Kubernetes-кластере?»",
+    "reference_answer": "Namespaces — только один уровень. Нужны RBAC, NetworkPolicies, ResourceQuota/LimitRange, отдельные service accounts, admission/security policies и при необходимости node/pool isolation.",
+    "source": "Публичная подборка DevOps interview questions."
+  },
+  {
+    "topic": "terraform",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Terraform remote state внезапно timeout. Что будете делать и как не повредить инфраструктуру?»",
+    "reference_answer": "Не запускать параллельные apply вслепую; проверить backend/network/credentials/locking, доступность state, provider/API и ошибки CI. Восстановление state должно быть отдельной контролируемой процедурой.",
+    "source": "Публичная подборка DevOps interview questions."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Linux-система упала. Как будете troubleshooting и какие реальные команды выполните?»",
+    "reference_answer": "Назвать последовательный triage: console/SSH, uptime/load, systemctl/journalctl, dmesg, disk/inodes, memory/swap, network, failed units и recent changes.",
+    "source": "Публичная подборка SRE interview experiences."
+  },
+  {
+    "topic": "aws",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «EC2 запускается из AWS Console, но SSH не работает. Как будете искать проблему?»",
+    "reference_answer": "Проверить instance state/system status, public/private IP, route table, security group, NACL, subnet/IGW/NAT, sshd/listening port и OS firewall; затем key/user/permissions.",
+    "source": "Публичная подборка DevOps interview questions."
+  },
+  {
+    "topic": "kubernetes",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: «Pod stuck в Pending / CrashLoopBackOff / ImagePullBackOff. Как различите причины?»",
+    "reference_answer": "Pending — scheduler/resources/taints/affinity/PVC; CrashLoopBackOff — приложение/command/config/probe/OOM и logs --previous; ImagePullBackOff — image name/tag, registry, credentials, DNS/network/TLS.",
+    "source": "Публичная подборка DevOps interview questions."
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: после релиза p95 latency выросла вдвое, но error rate нормальный. Какие данные соберёте до rollback и как локализуете причину?",
+    "reference_answer": "Сначала подтвердить окно деградации и сравнить новую/старую версию по endpoint, region и dependency. Посмотреть RED/USE-метрики, traces медленных запросов, saturation CPU/GC/connection pools, изменения БД и внешних API. Rollback подготовить сразу, но не выдавать гипотезу за причину; при риске SLO — откатить или остановить rollout.",
+    "source": "Нормализованный сценарий из публичных SRE/DevOps interview reports."
+  },
+  {
+    "topic": "linux",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: диск показывает 100% usage, но du по каталогам заметно меньше. Почему так бывает и что сделаете?",
+    "reference_answer": "Частая причина — удалённый, но ещё открытый процессом файл: он занимает blocks, пока процесс не закроет descriptor. Проверить lsof +L1 или lsof | grep deleted, затем безопасно перезапустить/перезагрузить владеющий процесс. Также проверить reserved blocks, mount points и inode exhaustion через df -h и df -i.",
+    "source": "Нормализованный сценарий из публичных Linux/SRE interview reports."
+  },
+  {
+    "topic": "docker",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: контейнер работает локально, но в Kubernetes постоянно получает OOMKilled. Как докажете причину и что измените?",
+    "reference_answer": "Проверить exit code 137, events, memory limit/request, usage по container и приложения, heap/worker concurrency и утечки. Локальный Docker может не иметь лимита, поэтому результат неэквивалентен. Исправление — оптимизировать потребление/конфигурацию и выставить обоснованные requests/limits; просто повышать limit без измерений недостаточно.",
+    "source": "Нормализованный сценарий из публичных DevOps interview reports."
+  },
+  {
+    "topic": "cicd",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: production deployment прошёл успешно по статусу CI, но новая версия не обслуживает трафик. Как построите проверку и rollback в pipeline?",
+    "reference_answer": "CI-статус не равен здоровому сервису: нужны post-deploy checks — rollout status, readiness, synthetic smoke/API check, метрики error rate и latency в окне наблюдения. Деплой должен иметь версионированный артефакт и явный rollback до предыдущей ревизии; при нарушении порогов pipeline автоматически останавливает rollout и фиксирует контекст для расследования.",
+    "source": "Нормализованный сценарий из публичных DevOps interview reports."
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: сервис доступен по IP, но не по доменному имени только из одного namespace. Какая последовательность диагностики?",
+    "reference_answer": "Проверить DNS из пода (nslookup/dig), resolv.conf, CoreDNS endpoints/logs и NetworkPolicy/egress до DNS. Сравнить с рабочим namespace, проверить имя сервиса и search domains. Не смешивать DNS-проблему с доступностью самого сервиса: успешное обращение по IP уже отделяет эти уровни.",
+    "source": "Нормализованный сценарий из публичных Kubernetes interview reports."
+  },
+  {
+    "topic": "terraform",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: нужно переименовать Terraform resource без пересоздания реального ресурса. Как выполните изменение безопасно?",
+    "reference_answer": "Использовать moved block в актуальном Terraform либо terraform state mv в контролируемой процедуре, затем проверить plan, что create/destroy отсутствуют. Перед изменением сделать backup state, выполнить через один защищённый workflow с locking и review; не редактировать remote state вручную без необходимости.",
+    "source": "Нормализованный сценарий из публичных IaC interview reports."
+  },
+  {
+    "topic": "security",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: секрет случайно попал в CI-лог и был виден несколько минут. Какие первые действия и какие системные изменения после инцидента?",
+    "reference_answer": "Считать секрет скомпрометированным: немедленно отозвать/ротировать, ограничить доступ к логам и проверить audit использования. Затем удалить или ограничить retention по процедуре, зафиксировать инцидент. Для профилактики — masking, secret scanning, short-lived credentials/OIDC, минимальные права и запрет вывода переменных/команд с секретом.",
+    "source": "Нормализованный сценарий из публичных security/DevOps interview reports."
+  },
+  {
+    "topic": "aws",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: приложение в private subnet не может скачать обновления, хотя security group разрешает egress. Что проверите?",
+    "reference_answer": "Security group недостаточно: проверить route table private subnet на NAT Gateway/instance, маршрут NAT в Internet Gateway, public subnet и Elastic IP NAT, NACL и DNS. Сравнить маршрут и flow logs с работающей подсетью. Не открывать inbound как способ починить исходящий трафик.",
+    "source": "Нормализованный сценарий из публичных cloud interview reports."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Чем отличаются /proc, /sys и /dev в Linux?",
+    "reference_answer": "/proc даёт информацию о процессах и параметрах ядра, /sys — структурированный интерфейс устройств и драйверов, /dev содержит файлы устройств. Это виртуальные файловые системы, а не обычные данные на диске.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "linux",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Как быстро проверить доступность TCP-порта на удалённом хосте?",
+    "reference_answer": "Подойдут nc -vz host port, curl для HTTP(S), либо bash-проверка через /dev/tcp. Если проверка не проходит, отдельно проверяют DNS, маршрут, firewall/security group и слушающий процесс.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "cicd",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Зачем в Bash-скриптах CI используют set -e и чего он не гарантирует?",
+    "reference_answer": "set -e завершает скрипт при ошибке простой команды, снижая риск продолжить пайплайн после сбоя. У него есть исключения в условиях, пайпах и подстановках, поэтому нужны set -o pipefail и явные проверки критичных шагов.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "aws",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "В чём разница между NAT Gateway и Internet Gateway в AWS?",
+    "reference_answer": "Internet Gateway даёт маршрут между VPC и интернетом для ресурсов с публичной адресацией. NAT Gateway позволяет инстансам private subnet ходить наружу без возможности инициировать входящее соединение из интернета.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "aws",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Чем IAM role отличается от IAM policy?",
+    "reference_answer": "Policy описывает разрешения в JSON. Role — идентичность, которую может принять сервис, пользователь или внешний провайдер и к которой привязаны policies; она обычно выдаёт временные credentials.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "security",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Что добавляет TLS поверх TCP и зачем нужен handshake?",
+    "reference_answer": "TLS аутентифицирует сервер сертификатом, согласует ключи и шифры, затем защищает данные целостностью и конфиденциальностью. Handshake нужен для проверки сертификата и безопасного получения сессионных ключей.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "monitoring",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Почему Grafana сама по себе не является хранилищем метрик?",
+    "reference_answer": "Grafana визуализирует и запрашивает данные из источников, например Prometheus, Loki или Elasticsearch. Хранение, сбор, retention и доступность данных обеспечивает выбранный datasource.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "networks",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Когда TCP предпочтительнее UDP, а когда UDP уместнее?",
+    "reference_answer": "TCP выбирают, когда важны надёжная доставка, порядок и контроль перегрузки: HTTP, БД, SSH. UDP уместен, когда важнее задержка и приложение само управляет потерями: DNS, VoIP, стриминг.",
+    "source": "Адаптировано по Speedrun IT DevOps questions."
+  },
+  {
+    "topic": "git",
+    "grade": "middle",
+    "question_type": "real_interview",
+    "question": "На собеседовании: после неудачного rebase в вашей ветке исчезли два коммита. Как их найдёте и восстановите?",
+    "reference_answer": "Сначала посмотреть git reflog, найти прежний SHA HEAD и создать от него ветку либо сделать cherry-pick нужных коммитов. До force-push нужно убедиться, что история коллег не будет перезаписана.",
+    "source": "Нормализованный сценарий из публичных Git interview reports."
+  },
+  {
+    "topic": "git",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: production-баг появился после одного из 80 коммитов. Как быстро найдёте регрессию?",
+    "reference_answer": "Использовать git bisect между известными good и bad ревизиями, вручную или через git bisect run с воспроизводимым тестом. После нахождения коммита проверить причину и подготовить минимальный безопасный rollback или fix.",
+    "source": "Нормализованный сценарий из публичных Git interview reports."
+  },
+  {
+    "topic": "ansible",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Что означает идемпотентность Ansible playbook и зачем она важна?",
+    "reference_answer": "Повторный запуск идемпотентного playbook не меняет уже корректное состояние. Это делает автоматизацию предсказуемой, безопасной для повторных запусков и удобной для CI/CD.",
+    "source": "База тренажёра."
+  },
+  {
+    "topic": "ansible",
+    "grade": "senior",
+    "question_type": "real_interview",
+    "question": "На собеседовании: playbook обновил конфиг на сотнях серверов, но сервисы не перезапустились. Как спроектируете исправление?",
+    "reference_answer": "Проверить changed-статус задачи, notify и handlers, имя handler и условия выполнения. Исправление тестируют на ограниченном inventory, а перезапуск делают handler-ом только при изменении конфига, с serial и проверкой health.",
+    "source": "Нормализованный сценарий из публичных DevOps interview reports."
+  },
+  {
+    "topic": "aws",
+    "grade": "middle",
+    "question_type": "practical",
+    "question": "Практика: EC2 в private subnet не выходит в интернет. Какие элементы маршрута проверите?",
+    "reference_answer": "Проверить route table private subnet на NAT Gateway, маршрут NAT в Internet Gateway, public subnet и Elastic IP NAT. Затем проверить NACL, security group и DNS; inbound-правило для этого не требуется.",
+    "source": "Практическая cloud-задача."
+  },
+  {
+    "topic": "aws",
+    "grade": "senior",
+    "question_type": "practical",
+    "question": "Практика: приложение получило AccessDenied в AWS после деплоя. Как локализуете причину без расширения прав наугад?",
+    "reference_answer": "Сверить IAM role приложения, trust policy, permission boundary и конкретное действие/ресурс в CloudTrail. Добавить минимально необходимое разрешение после проверки условий, а не выдавать AdministratorAccess.",
+    "source": "Практическая cloud-задача."
+  },
+  {
+    "topic": "terraform",
+    "grade": "middle",
+    "question_type": "theory",
+    "question": "Зачем Terraform хранит state и почему его нельзя коммитить в репозиторий?",
+    "reference_answer": "State связывает конфигурацию с реальными ресурсами и хранит их атрибуты для plan/apply. Он может содержать чувствительные данные, поэтому нужен защищённый remote backend с ограниченным доступом и locking.",
+    "source": "База тренажёра."
+  },
+  {
+    "topic": "terraform",
+    "grade": "senior",
+    "question_type": "theory",
+    "question": "Чем опасен ручной terraform state rm и когда он оправдан?",
+    "reference_answer": "Команда убирает ресурс только из state, но не удаляет его в облаке; следующий plan может предложить создать дубликат. Её используют лишь в контролируемой процедуре с backup state и пониманием дальнейшего импорта или удаления ресурса.",
+    "source": "База тренажёра."
+  }
+]
