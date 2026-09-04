@@ -16,7 +16,7 @@
 Нужны [Docker Desktop](https://www.docker.com/products/docker-desktop/) и Docker Compose.
 
 ```bash
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
+git clone <URL>
 cd devops-trainer
 cp .env.example .env
 ```
